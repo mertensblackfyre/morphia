@@ -11,13 +11,15 @@ import (
 
 func main() {
 
-	dg, err := discordgo.New("Bot "+ DISCORD_KEY)
+	dg, err := discordgo.New("Bot " + DISCORD_KEY)
 	if err != nil {
-		fmt.Println("Error creating Discord session:", err)
+		fmt.Println("Error creating Discord dg:", err)
 		return
 	}
 
-	dg.AddHandler(messageCreate)
+	dg.AddHandler(slashCommands)
+	RegisterCommands(dg)
+
 
 	err = dg.Open()
 	if err != nil {
@@ -32,15 +34,3 @@ func main() {
 
 	dg.Close()
 }
-
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-	fmt.Println(m.Content)
-	if m.Content == "hello" {
-		s.ChannelMessageSend(m.ChannelID, "Pong!")
-	}
-}
-
-
