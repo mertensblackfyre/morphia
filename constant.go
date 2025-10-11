@@ -23,12 +23,6 @@ var commands = []*discordgo.ApplicationCommand{
 				Description: "Color of the role (integer hex, e.g. 16711680 for red)",
 				Required:    true,
 			},
-			{
-				Type:        discordgo.ApplicationCommandOptionBoolean,
-				Name:        "assignme",
-				Description: "Whether to assign the role to you automatically",
-				Required:    false,
-			},
-		},
+				},
 	},
 }

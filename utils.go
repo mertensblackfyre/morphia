@@ -35,10 +35,9 @@ func RemoveCommands(session *discordgo.Session) {
 // Create role and optionally assign it
 func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	options := interaction.ApplicationCommandData().Options
-	roleName := options[0].StringValue()
-
 	var color int
 
+	fmt.Println(color)
 	if len(options) > 1 {
 		for _, opt := range options {
 			if opt.Name == "color" {
@@ -47,25 +46,24 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 
 		}
 	}
+	aa := &discordgo.RoleParams{
+		Name:  options[0].StringValue(),
+		Color: &color,
+		
+	}
 
-	role, err := session.GuildRoleCreate(interaction.GuildID)
+	role, err := session.GuildRoleCreate(interaction.GuildID, aa)
+
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
+	err = session.GuildMemberRoleAdd(interaction.GuildID, interaction.Member.User.ID, role.ID)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	/*if assignMe {
-	err := session.GuildMemberRoleAdd(interaction.GuildID, interaction.Member.User.ID, role.ID)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	*/
 	return
 
 }

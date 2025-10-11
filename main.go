@@ -17,8 +17,7 @@ func main() {
 		return
 	}
 
-	dg.AddHandler(slashCommands)
-	RegisterCommands(dg)
+	dg.AddHandler(onInteraction)
 
 
 	err = dg.Open()
@@ -27,10 +26,23 @@ func main() {
 		return
 	}
 
+	RegisterCommands(dg)
 	fmt.Println("Bot is running. Press CTRL+C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
+	RemoveCommands(dg)
+
 	dg.Close()
+}
+
+// Handle slash commands
+func onInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	data := i.ApplicationCommandData()
+
+	switch data.Name {
+	case "createrole":
+		CreateRole(s, i)
+	}
 }
