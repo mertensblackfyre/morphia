@@ -23,6 +23,11 @@ var commands = []*discordgo.ApplicationCommand{
 				Description: "Color of the role (integer hex, e.g. 16711680 for red)",
 				Required:    true,
 			},
-				},
+		},
+	},
+
+	{
+		Name:        "removerole",
+		Description: "Remove your role",
 	},
 }

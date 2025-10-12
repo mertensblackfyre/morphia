@@ -37,33 +37,61 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 	options := interaction.ApplicationCommandData().Options
 	var color int
 
-	fmt.Println(color)
 	if len(options) > 1 {
 		for _, opt := range options {
 			if opt.Name == "color" {
 				color = int(opt.IntValue())
 			}
-
 		}
 	}
+
 	aa := &discordgo.RoleParams{
 		Name:  options[0].StringValue(),
 		Color: &color,
-		
 	}
 
 	role, err := session.GuildRoleCreate(interaction.GuildID, aa)
 
 	if err != nil {
+		ReplyError(session, interaction, err.Error())
 		fmt.Println(err)
 		return
 	}
 
 	err = session.GuildMemberRoleAdd(interaction.GuildID, interaction.Member.User.ID, role.ID)
 	if err != nil {
+		ReplyError(session, interaction, err.Error())
 		fmt.Println(err)
 		return
 	}
-	return
 
+	ReplySuccess(session, interaction, "Role created")
+	return
+}
+
+
+func DeleteRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+
+
+}
+
+// Helper response functions
+func ReplyError(s *discordgo.Session, i *discordgo.InteractionCreate, msg string) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: msg,
+			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	})
+}
+
+func ReplySuccess(s *discordgo.Session, i *discordgo.InteractionCreate, msg string) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: msg,
+			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	})
 }
