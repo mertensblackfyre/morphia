@@ -1,18 +1,17 @@
 package main
 
 import (
-	//"fmt"
-	//"os"
-	//"os/signal"
-	//"syscall"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 func main() {
 
-	run()
-	/*
+	Init()
 	dg, err := discordgo.New("Bot " + DISCORD_KEY)
 	if err != nil {
 		fmt.Println("Error creating Discord dg:", err)
@@ -20,7 +19,6 @@ func main() {
 	}
 
 	dg.AddHandler(onInteraction)
-
 
 	err = dg.Open()
 	if err != nil {
@@ -36,8 +34,8 @@ func main() {
 
 	RemoveCommands(dg)
 
+	defer DB.Close()
 	dg.Close()
-	*/
 }
 
 // Handle slash commands

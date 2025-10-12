@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -36,7 +37,7 @@ func RemoveCommands(session *discordgo.Session) {
 func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 	options := interaction.ApplicationCommandData().Options
 	var color int
-
+	var name string = options[0].StringValue()
 	if len(options) > 1 {
 		for _, opt := range options {
 			if opt.Name == "color" {
@@ -46,7 +47,7 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 	}
 
 	aa := &discordgo.RoleParams{
-		Name:  options[0].StringValue(),
+		Name:  name,
 		Color: &color,
 	}
 
@@ -59,19 +60,20 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 	}
 
 	err = session.GuildMemberRoleAdd(interaction.GuildID, interaction.Member.User.ID, role.ID)
+	
 	if err != nil {
 		ReplyError(session, interaction, err.Error())
 		fmt.Println(err)
 		return
 	}
 
+	str := strconv.Itoa(color)
+	InsertRoleDB(role.ID, name, session.State.User.ID, str)
 	ReplySuccess(session, interaction, "Role created")
 	return
 }
 
-
 func DeleteRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
-
 
 }
 

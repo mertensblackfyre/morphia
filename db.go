@@ -9,54 +9,51 @@ import (
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
-func run() (err error) {
+// declare globally
+var DB *sql.DB
+
+func Init() (err error) {
 
 	url := TURSO_DATABASE_URL + "?authToken=" + TURSO_AUTH_TOKEN
 
 	// Open database connection
-	db, err := sql.Open("libsql", url)
+	DB, err = sql.Open("libsql", url)
 	if err != nil {
-		return fmt.Errorf("error opening cloud db: %w", err)
+		return fmt.Errorf("error opening cloud DB: %w", err)
 	}
-	defer db.Close()
 
 	// Configure connection pool
-	db.SetConnMaxIdleTime(9 * time.Second)
+	DB.SetConnMaxIdleTime(9 * time.Second)
 
 	ctx := context.Background()
 
 	schema := `
+	PRAGMA foreign_keys = ON;
+
+
 	CREATE TABLE IF NOT EXISTS roles (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT UNIQUE,
+		user_id TEXT,
+		role_id TEXT,
+		name TEXT,
 		color TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-
-	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT,
-		role TEXT,
-		booster INTEGER,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (role) REFERENCES roles(name)
-			ON UPDATE CASCADE
-			ON DELETE SET NULL
-	);
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
 	`
 
 	// Create test table
-	_, err = db.ExecContext(ctx, schema)
+	_, err = DB.ExecContext(ctx, schema)
 	if err != nil {
-		return fmt.Errorf("error creating table: %w", err)
+		fmt.Println(err)
+		return nil
 	}
 
 	return nil
 }
-func InsertRoleDB(db *sql.DB,role_id string , name string) {
-	_, err := db.Exec("INSERT INTO role (id, name) VALUES (?, ?)", role_id, name)
+func InsertRoleDB(role_id string, name string, user_id string, color string) {
+	_, err := DB.ExecContext(context.Background(),"INSERT INTO roles (role_id,name, user_id, color) VALUES (?, ?,?,?)", role_id, name, user_id, color)
 	if err != nil {
-		fmt.Errorf("error inserting data: %w", err)
+		fmt.Println(err)
+		return
 	}
 	fmt.Println("Inserted test data")
 }
