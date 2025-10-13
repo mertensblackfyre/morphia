@@ -52,5 +52,8 @@ func onInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		CreateRole(s, i)
 	case "removerole":
 		DeleteRole(s, i)
+	case "editrole":
+		UpdateRole(s, i)
+
 	}
 }

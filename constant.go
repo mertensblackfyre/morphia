@@ -6,7 +6,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-
 type Role struct {
 	ID        int       `db:"id"`
 	UserID    string    `db:"user_id"`
@@ -34,6 +33,24 @@ var commands = []*discordgo.ApplicationCommand{
 				Name:        "color",
 				Description: "Color of the role (integer hex, e.g. 16711680 for red)",
 				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        "editrole",
+		Description: "Edit your role in this server",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "name",
+				Description: "New name of the role",
+				Required:    false,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "color",
+				Description: "The new color of the role (integer hex, e.g. 0x16711680 for red)",
+				Required:    false,
 			},
 		},
 	},

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
@@ -34,6 +34,12 @@ func RemoveCommands(session *discordgo.Session) {
 
 // Create role and optionally assign it
 func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+
+	if CheckUserHasRole(interaction.Member.User.ID) == 0 {
+		ReplyError(session, interaction, "You already have a role")
+		return
+	}
+
 	options := interaction.ApplicationCommandData().Options
 	var color int
 	var name string = options[0].StringValue()
@@ -74,36 +80,62 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 }
 
 func DeleteRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+	role := TraverseDB(interaction.Member.User.ID)
 
-	rows, err := DB.QueryContext(context.Background(), "SELECT * from roles")
-
+	err := session.GuildRoleDelete(interaction.GuildID, role.RoleID)
 	if err != nil {
-
 		Sugar.Errorln(err)
+		return
 	}
-
-	for rows.Next() {
-		var role Role
-		if err := rows.Scan(&role.ID, &role.UserID, &role.RoleID, &role.Name, &role.Color, &role.CreatedAt); err != nil {
-			Sugar.Errorln("Error scanning row:", err)
-			ReplyError(session, interaction, err.Error())
-			return
-		}
-		if role.UserID == interaction.Member.User.ID {
-			err := session.GuildRoleDelete(interaction.GuildID, role.RoleID)
-			if err != nil {
-				ReplyError(session, interaction, "Role not found")
-				Sugar.Errorln(err)
-				return
-			}
-			RemoveRoleDB(role.RoleID,role.UserID)
-		} else {
-			return
-
-		}
-	}
+	RemoveRoleDB(role.RoleID, role.UserID)
 	Sugar.Infof("Role have been removed")
 	ReplySuccess(session, interaction, "Your role have been deleted")
+}
+
+func UpdateRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
+
+	r := TraverseDB(interaction.Member.User.ID)
+	options := interaction.ApplicationCommandData().Options
+
+	var color int
+	var name string
+
+	if len(options) >= 1 {
+		for _, opt := range options {
+			if opt.Name == "color" {
+				color = int(opt.IntValue())
+			}
+			if  opt.Name == "name"{
+				name = opt.StringValue()
+			}
+		}
+	} else {
+		ReplyError(session, interaction, "No values")
+		Sugar.Errorln("No Values")
+		return
+	}
+
+	fmt.Println(name)
+	fmt.Println(color)
+	role_params := &discordgo.RoleParams{
+		Name:  name,
+		Color: &color,
+	}
+
+	_, err := session.GuildRoleEdit(interaction.GuildID, r.RoleID, role_params)
+
+	if err != nil {
+		ReplyError(session, interaction, err.Error())
+		Sugar.Errorln(err)
+		return
+	}
+
+	str := strconv.Itoa(color)
+	UpdateRoleDB(name, str, r.RoleID)
+	ReplySuccess(session, interaction, "Role Updated")
+	Sugar.Infof("Role %s have been updated", name)
+	return
+
 }
 
 func ReplyError(s *discordgo.Session, i *discordgo.InteractionCreate, msg string) {
