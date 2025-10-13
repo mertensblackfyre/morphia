@@ -1,8 +1,20 @@
 package main
 
 import (
+	"time"
+
 	"github.com/bwmarrin/discordgo"
 )
+
+
+type Role struct {
+	ID        int       `db:"id"`
+	UserID    string    `db:"user_id"`
+	RoleID    string    `db:"role_id"`
+	Name      string    `db:"name"`
+	Color     string    `db:"color"`
+	CreatedAt time.Time `db:"created_at"`
+}
 
 // Define the slash commands
 var commands = []*discordgo.ApplicationCommand{

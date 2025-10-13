@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,9 +11,14 @@ import (
 func main() {
 
 	Init()
+	Logger()
+
+	Sugar.Infow("App started", "version", "1.0.0")
+
 	dg, err := discordgo.New("Bot " + DISCORD_KEY)
+
 	if err != nil {
-		fmt.Println("Error creating Discord dg:", err)
+		Sugar.Errorw("Error creating Discord dg:", "error", err)
 		return
 	}
 
@@ -22,18 +26,19 @@ func main() {
 
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("Error opening connection:", err)
+		Sugar.Errorw("Error opening connection:", "error", err)
 		return
 	}
 
 	RegisterCommands(dg)
-	fmt.Println("Bot is running. Press CTRL+C to exit.")
+	Sugar.Infoln("Bot is running. Press CTRL+C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
 	RemoveCommands(dg)
 
+	defer Sugar.Sync()
 	defer DB.Close()
 	dg.Close()
 }
@@ -45,5 +50,7 @@ func onInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch data.Name {
 	case "createrole":
 		CreateRole(s, i)
+	case "removerole":
+		DeleteRole(s, i)
 	}
 }

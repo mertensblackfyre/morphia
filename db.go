@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
@@ -19,7 +18,8 @@ func Init() (err error) {
 	// Open database connection
 	DB, err = sql.Open("libsql", url)
 	if err != nil {
-		return fmt.Errorf("error opening cloud DB: %w", err)
+		Sugar.Errorw("error opening cloud DB: %w", err)
+		return err
 	}
 
 	// Configure connection pool
@@ -29,7 +29,6 @@ func Init() (err error) {
 
 	schema := `
 	PRAGMA foreign_keys = ON;
-
 
 	CREATE TABLE IF NOT EXISTS roles (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,17 +42,27 @@ func Init() (err error) {
 	// Create test table
 	_, err = DB.ExecContext(ctx, schema)
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		Sugar.Errorw("Error creating table", "error", err)
+		return err
 	}
 
 	return nil
 }
 func InsertRoleDB(role_id string, name string, user_id string, color string) {
-	_, err := DB.ExecContext(context.Background(),"INSERT INTO roles (role_id,name, user_id, color) VALUES (?, ?,?,?)", role_id, name, user_id, color)
+	_, err := DB.ExecContext(context.Background(), "INSERT INTO roles (role_id,name, user_id, color) VALUES (?,?,?,?)", role_id, name, user_id, color)
 	if err != nil {
-		fmt.Println(err)
+		Sugar.Errorw("Error inserting data", "error", err)
 		return
 	}
-	fmt.Println("Inserted test data")
+	Sugar.Info("Successfully inserted to the database")
+}
+
+func RemoveRoleDB(role_id string, user_id string) {
+	_, err := DB.ExecContext(context.Background(), "DELETE FROM roles WHERE user_id = ? AND role_id = ?", user_id, role_id)
+	if err != nil {
+		Sugar.Errorw("Error removing data", "error", err)
+		return
+	}
+
+	Sugar.Info("Successfully deleted from the databases")
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
@@ -9,11 +9,11 @@ import (
 
 func RegisterCommands(session *discordgo.Session) {
 
-	fmt.Println("Registering commands...")
+	Sugar.Infoln("Registering commands...")
 	for _, v := range commands {
 		cmd, err := session.ApplicationCommandCreate(session.State.User.ID, GUILD_ID, v)
 		if err != nil {
-			fmt.Printf("Cannot create '%v' command: %v\n", v.Name, err)
+			Sugar.Infof("Cannot create '%v' command: %v\n", v.Name, err)
 		} else {
 			RegisteredCommands = append(RegisteredCommands, cmd)
 		}
@@ -24,13 +24,12 @@ func RemoveCommands(session *discordgo.Session) {
 	for _, cmd := range commands {
 		err := session.ApplicationCommandDelete(session.State.User.ID, GUILD_ID, cmd.ID)
 		if err != nil {
-			fmt.Printf("Failed to delete %s: %v\n", cmd.Name, err)
+			Sugar.Errorf("Failed to delete %s: %v\n", cmd.Name, err)
 		} else {
-			fmt.Printf("Deleted /%s\n", cmd.Name)
+			Sugar.Errorf("Deleted /%s\n", cmd.Name)
 		}
 	}
 	session.Close()
-	fmt.Println("👋 Bot shut down.")
 }
 
 // Create role and optionally assign it
@@ -55,29 +54,57 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 
 	if err != nil {
 		ReplyError(session, interaction, err.Error())
-		fmt.Println(err)
+		Sugar.Errorln(err)
 		return
 	}
 
 	err = session.GuildMemberRoleAdd(interaction.GuildID, interaction.Member.User.ID, role.ID)
-	
+
 	if err != nil {
 		ReplyError(session, interaction, err.Error())
-		fmt.Println(err)
+		Sugar.Errorln(err)
 		return
 	}
 
 	str := strconv.Itoa(color)
-	InsertRoleDB(role.ID, name, session.State.User.ID, str)
+	InsertRoleDB(role.ID, name, interaction.Member.User.ID, str)
 	ReplySuccess(session, interaction, "Role created")
+	Sugar.Infof("Role %s have been created", name)
 	return
 }
 
 func DeleteRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 
+	rows, err := DB.QueryContext(context.Background(), "SELECT * from roles")
+
+	if err != nil {
+
+		Sugar.Errorln(err)
+	}
+
+	for rows.Next() {
+		var role Role
+		if err := rows.Scan(&role.ID, &role.UserID, &role.RoleID, &role.Name, &role.Color, &role.CreatedAt); err != nil {
+			Sugar.Errorln("Error scanning row:", err)
+			ReplyError(session, interaction, err.Error())
+			return
+		}
+		if role.UserID == interaction.Member.User.ID {
+			err := session.GuildRoleDelete(interaction.GuildID, role.RoleID)
+			if err != nil {
+				ReplyError(session, interaction, err.Error())
+				Sugar.Errorln(err)
+				return
+			}
+		} else {
+			return
+
+		}
+	}
+	Sugar.Infof("Role have been removed")
+	ReplySuccess(session, interaction, "Your role have been deleted")
 }
 
-// Helper response functions
 func ReplyError(s *discordgo.Session, i *discordgo.InteractionCreate, msg string) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
