@@ -92,10 +92,11 @@ func DeleteRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 		if role.UserID == interaction.Member.User.ID {
 			err := session.GuildRoleDelete(interaction.GuildID, role.RoleID)
 			if err != nil {
-				ReplyError(session, interaction, err.Error())
+				ReplyError(session, interaction, "Role not found")
 				Sugar.Errorln(err)
 				return
 			}
+			RemoveRoleDB(role.RoleID,role.UserID)
 		} else {
 			return
 
