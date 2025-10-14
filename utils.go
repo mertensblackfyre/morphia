@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
@@ -31,6 +32,43 @@ func RemoveCommands(session *discordgo.Session) {
 	session.Close()
 }
 
+func ReorderRole(s *discordgo.Session, guildID string, role_id string) error {
+	roles, err := s.GuildRoles(guildID)
+	if err != nil {
+		return fmt.Errorf("failed to get roles: %w", err)
+	}
+
+	maxPos := 0
+	for _, r := range roles {
+		fmt.Println(r.Name)
+		fmt.Println(r.Position)
+		if r.Managed {
+			if r.Position > maxPos {
+				maxPos = r.Position
+			}
+		}
+	}
+
+	var reordered []*discordgo.Role
+	for _, r := range roles {
+		pos := r.Position
+		if r.ID == role_id {
+			pos = maxPos + 1
+		}
+		reordered = append(reordered, &discordgo.Role{
+			ID:       r.ID,
+			Position: pos,
+		})
+	}
+
+	_, err = s.GuildRoleReorder(guildID, reordered)
+	if err != nil {
+		return fmt.Errorf("failed to reorder roles: %w", err)
+	}
+
+	return nil
+}
+
 func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 
 	if CheckUserHasRole(interaction.Member.User.ID) == 0 {
@@ -39,8 +77,10 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 	}
 
 	options := interaction.ApplicationCommandData().Options
+
 	var color int
 	var name string = options[0].StringValue()
+	var mentionable bool = false
 
 	if len(options) > 1 {
 		for _, opt := range options {
@@ -51,8 +91,9 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 	}
 
 	aa := &discordgo.RoleParams{
-		Name:  name,
-		Color: &color,
+		Name:        name,
+		Color:       &color,
+		Mentionable: &mentionable,
 	}
 
 	role, err := session.GuildRoleCreate(interaction.GuildID, aa)
@@ -61,6 +102,12 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 		ReplyError(session, interaction, err.Error())
 		Sugar.Errorln(err)
 		return
+	}
+
+	err = ReorderRole(session, interaction.GuildID, role.ID)
+
+	if err != nil {
+		Sugar.Errorln(err)
 	}
 
 	err = session.GuildMemberRoleAdd(interaction.GuildID, interaction.Member.User.ID, role.ID)

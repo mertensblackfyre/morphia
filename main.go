@@ -22,7 +22,7 @@ func main() {
 		return
 	}
 
-	dg.AddHandler(onInteraction)
+	go dg.AddHandler(onInteraction)
 
 	err = dg.Open()
 	if err != nil {
@@ -49,11 +49,11 @@ func onInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	switch data.Name {
 	case "createrole":
-		CreateRole(s, i)
+		go CreateRole(s, i)
 	case "removerole":
-		DeleteRole(s, i)
+		go DeleteRole(s, i)
 	case "editrole":
-		UpdateRole(s, i)
+		go UpdateRole(s, i)
 
 	}
 }
