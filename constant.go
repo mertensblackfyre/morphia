@@ -31,7 +31,7 @@ var commands = []*discordgo.ApplicationCommand{
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "color",
-				Description: "Color of the role (integer hex, e.g. 16711680 for red)",
+				Description: "Color of the role (integer hex, e.g. 0xFF0000 for red)",
 				Required:    true,
 			},
 		},
@@ -49,7 +49,7 @@ var commands = []*discordgo.ApplicationCommand{
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "color",
-				Description: "The new color of the role (integer hex, e.g. 0x16711680 for red)",
+				Description: "The new color of the role (integer hex, e.g. 0xFF0000 for red)",
 				Required:    false,
 			},
 		},

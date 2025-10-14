@@ -9,21 +9,18 @@ import (
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
-// declare globally
 var DB *sql.DB
 
 func Init() (err error) {
 
 	url := TURSO_DATABASE_URL + "?authToken=" + TURSO_AUTH_TOKEN
 
-	// Open database connection
 	DB, err = sql.Open("libsql", url)
 	if err != nil {
 		Sugar.Errorw("error opening cloud DB: %w", err)
 		return err
 	}
 
-	// Configure connection pool
 	DB.SetConnMaxIdleTime(9 * time.Second)
 
 	ctx := context.Background()
@@ -40,7 +37,6 @@ func Init() (err error) {
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
 	`
 
-	// Create test table
 	_, err = DB.ExecContext(ctx, schema)
 	if err != nil {
 		Sugar.Errorw("Error creating table", "error", err)

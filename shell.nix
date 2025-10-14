@@ -3,9 +3,7 @@ let
 in
   pkgs.mkShell {
     packages = [
-     pkgs.nodejs_20
-      pkgs.yarn
-
+   pkgs.go
 
   ];
   }

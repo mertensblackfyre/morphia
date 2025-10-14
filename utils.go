@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
@@ -32,7 +31,6 @@ func RemoveCommands(session *discordgo.Session) {
 	session.Close()
 }
 
-// Create role and optionally assign it
 func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 
 	if CheckUserHasRole(interaction.Member.User.ID) == 0 {
@@ -43,6 +41,7 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 	options := interaction.ApplicationCommandData().Options
 	var color int
 	var name string = options[0].StringValue()
+
 	if len(options) > 1 {
 		for _, opt := range options {
 			if opt.Name == "color" {
@@ -96,16 +95,19 @@ func UpdateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 
 	r := TraverseDB(interaction.Member.User.ID)
 	options := interaction.ApplicationCommandData().Options
-
-	var color int
-	var name string
+	num, err := strconv.Atoi(r.Color)
+	if err != nil {
+		Sugar.Error(err)
+	}
+	var color int = int(num)
+	var name string = r.Name
 
 	if len(options) >= 1 {
 		for _, opt := range options {
 			if opt.Name == "color" {
 				color = int(opt.IntValue())
 			}
-			if  opt.Name == "name"{
+			if opt.Name == "name" {
 				name = opt.StringValue()
 			}
 		}
@@ -115,14 +117,12 @@ func UpdateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 		return
 	}
 
-	fmt.Println(name)
-	fmt.Println(color)
 	role_params := &discordgo.RoleParams{
 		Name:  name,
 		Color: &color,
 	}
 
-	_, err := session.GuildRoleEdit(interaction.GuildID, r.RoleID, role_params)
+	_, err = session.GuildRoleEdit(interaction.GuildID, r.RoleID, role_params)
 
 	if err != nil {
 		ReplyError(session, interaction, err.Error())
@@ -130,7 +130,7 @@ func UpdateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 		return
 	}
 
-	str := strconv.Itoa(color)
+	str := strconv.Itoa(*role_params.Color)
 	UpdateRoleDB(name, str, r.RoleID)
 	ReplySuccess(session, interaction, "Role Updated")
 	Sugar.Infof("Role %s have been updated", name)
