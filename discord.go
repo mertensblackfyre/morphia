@@ -33,59 +33,27 @@ func RemoveCommands(session *discordgo.Session) {
 	session.Close()
 }
 
-func ReorderRole(s *discordgo.Session, guildID string, role_id string) error {
+func ReorderRole(s *discordgo.Session, guildID string, role_id string, offset int) error {
 	roles, err := s.GuildRoles(guildID)
 	if err != nil {
 		Sugar.Error(err)
 		return err
 	}
 
-	// Find the role to move
-	var movingRole *discordgo.Role
+	var highest_role int = 0
+	for _, r := range roles {
+		if r.Position > highest_role {
+			highest_role = r.Position
+		}
+	}
 	for _, r := range roles {
 		if r.ID == role_id {
-			movingRole = r
+			r.Position = highest_role - offset
 			break
 		}
 	}
-	if movingRole == nil {
-		Sugar.Error("Role not found. Role can't be moved")
-		return nil
-	}
 
-	// Remove moving role from list
-	filtered := []*discordgo.Role{}
-	for _, r := range roles {
-		if r.ID != role_id {
-			filtered = append(filtered, r)
-		}
-	}
-	var index int = 1
-
-	// Apply offset and clamp
-	index += 15
-	if index < 1 {
-		index = 1
-	}
-	if index > len(filtered) {
-		index = len(filtered)
-	}
-
-	// Insert role back
-	updated := append(filtered[:index], append([]*discordgo.Role{movingRole}, filtered[index:]...)...)
-
-	// Prepare payload
-	payload := make([]*discordgo.Role, len(updated))
-	for i, r := range updated {
-		fmt.Println(updated[i])
-		payload[i] = &discordgo.Role{
-			ID:       r.ID,
-			Position: i,
-		}
-	}
-
-	// Perform reorder
-	_, err = s.GuildRoleReorder(guildID, payload)
+	_, err = s.GuildRoleReorder(guildID, roles)
 	if err != nil {
 		Sugar.Error(err)
 		return err
@@ -129,7 +97,7 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 		return
 	}
 
-	err = ReorderRole(session, interaction.GuildID, role.ID)
+	err = ReorderRole(session, interaction.GuildID, role.ID,12)
 
 	if err != nil {
 		Sugar.Errorln(err)
@@ -155,7 +123,7 @@ func DeleteRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 
 	err := session.GuildRoleDelete(interaction.GuildID, role.RoleID)
 	if err != nil {
-		ReplyError(session,interaction,"Role does not exist")
+		ReplyError(session, interaction, "Role does not exist")
 		Sugar.Errorln(err)
 		return
 	}

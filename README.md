@@ -5,7 +5,6 @@
 Morphia is a Discord bot that allows users to **create, remove, and edit their own custom roles** directly from Discord.
 It’s perfect for communities where users want personalized role names, colors, and visibility without giving full admin privileges.
 
----
 
 ## Features
 
@@ -18,11 +17,6 @@ It’s perfect for communities where users want personalized role names, colors,
 * **Remove your role**
   Delete your custom role whenever you want.
 
-* **Safe Permissions**
-  Users can manage only their own roles; no admin privileges are required.
-
----
-
 ## Commands
 
 * `/createrole <name> <color>` – Create a new role
@@ -31,7 +25,6 @@ It’s perfect for communities where users want personalized role names, colors,
 
 > Role colors can be provided as hex values (e.g., `0xFF00AA`).
 
----
 
 ## Setup
 
@@ -55,7 +48,6 @@ go mod tidy
 go run .
 ```
 
----
 
 ## Contributing
 
