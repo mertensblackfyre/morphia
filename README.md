@@ -2,7 +2,7 @@
 
 # Morphia Bot
 
-Morphia is a Discord bot that allows users to **create, remove, and edit their own custom roles** directly from Discord.
+Morphia is a Discord bot that allows users to **create, remove, and edit their own custom roles**.
 It’s perfect for communities where users want personalized role names, colors, and visibility without giving full admin privileges.
 
 
