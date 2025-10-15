@@ -10,19 +10,14 @@ import (
 
 func main() {
 
-	defer func() {
-		if r := recover(); r != nil {
-			Sugar.Error(r)
-		}
-	}()
-
 	Init()
 	Logger()
 
 	Sugar.Infow("App started", "version", "1.0.0")
 
 	dg, err := discordgo.New("Bot " + DISCORD_KEY)
-
+	dg.Identify.Intents = discordgo.IntentGuilds | discordgo.IntentGuildMembers
+	
 	if err != nil {
 		Sugar.Errorw("Error creating Discord dg:", "error", err)
 		return
@@ -49,11 +44,9 @@ func main() {
 	dg.Close()
 }
 
-// Handle slash commands
 func onInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	data := i.ApplicationCommandData()
 
-	GetPremuimUsers(s)
 	switch data.Name {
 	case "createrole":
 		go CreateRole(s, i)

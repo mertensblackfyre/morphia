@@ -15,6 +15,7 @@ func RegisterCommands(session *discordgo.Session) {
 		if err != nil {
 			Sugar.Infof("Cannot create '%v' command: %v\n", v.Name, err)
 		} else {
+			Sugar.Infof(v.Name)
 			RegisteredCommands = append(RegisteredCommands, cmd)
 		}
 	}
@@ -35,35 +36,59 @@ func RemoveCommands(session *discordgo.Session) {
 func ReorderRole(s *discordgo.Session, guildID string, role_id string) error {
 	roles, err := s.GuildRoles(guildID)
 	if err != nil {
-		return fmt.Errorf("failed to get roles: %w", err)
+		Sugar.Error(err)
+		return err
 	}
 
-	maxPos := 0
+	// Find the role to move
+	var movingRole *discordgo.Role
 	for _, r := range roles {
-		fmt.Println(r.Name)
-		fmt.Println(r.Position)
-		if r.Managed {
-			if r.Position > maxPos {
-				maxPos = r.Position
-			}
-		}
-	}
-
-	var reordered []*discordgo.Role
-	for _, r := range roles {
-		pos := r.Position
 		if r.ID == role_id {
-			pos = maxPos + 1
+			movingRole = r
+			break
 		}
-		reordered = append(reordered, &discordgo.Role{
-			ID:       r.ID,
-			Position: pos,
-		})
+	}
+	if movingRole == nil {
+		Sugar.Error("Role not found. Role can't be moved")
+		return nil
 	}
 
-	_, err = s.GuildRoleReorder(guildID, reordered)
+	// Remove moving role from list
+	filtered := []*discordgo.Role{}
+	for _, r := range roles {
+		if r.ID != role_id {
+			filtered = append(filtered, r)
+		}
+	}
+	var index int = 1
+
+	// Apply offset and clamp
+	index += 15
+	if index < 1 {
+		index = 1
+	}
+	if index > len(filtered) {
+		index = len(filtered)
+	}
+
+	// Insert role back
+	updated := append(filtered[:index], append([]*discordgo.Role{movingRole}, filtered[index:]...)...)
+
+	// Prepare payload
+	payload := make([]*discordgo.Role, len(updated))
+	for i, r := range updated {
+		fmt.Println(updated[i])
+		payload[i] = &discordgo.Role{
+			ID:       r.ID,
+			Position: i,
+		}
+	}
+
+	// Perform reorder
+	_, err = s.GuildRoleReorder(guildID, payload)
 	if err != nil {
-		return fmt.Errorf("failed to reorder roles: %w", err)
+		Sugar.Error(err)
+		return err
 	}
 
 	return nil
@@ -130,6 +155,7 @@ func DeleteRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 
 	err := session.GuildRoleDelete(interaction.GuildID, role.RoleID)
 	if err != nil {
+		ReplyError(session,interaction,"Role does not exist")
 		Sugar.Errorln(err)
 		return
 	}
@@ -184,13 +210,12 @@ func UpdateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 
 }
 
-func GetPremuimUsers(session *discordgo.Session) {
-	members, err := session.GuildMembers(session.State.Application.GuildID, "", 1000)
+func GetServerBoosters(session *discordgo.Session) {
+	members, err := session.GuildMembers(GUILD_ID, "", 1000)
 	if err != nil {
 		fmt.Println("Error getting members:", err)
 		return
 	}
-
 	for _, m := range members {
 		if m.PremiumSince != nil {
 			fmt.Printf(" Booster: %s (%s)\n", m.User.Username, m.User.ID)

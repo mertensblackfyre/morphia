@@ -9,6 +9,18 @@ import (
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
+/*
+
+	CREATE TABLE IF NOT EXISTS  server_boosters(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id TEXT UNIQUE,
+		role_id TEXT,
+		name TEXT,
+		username TEST,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+	
+*/
+
 var DB *sql.DB
 
 func Init() (err error) {
@@ -78,7 +90,7 @@ func RemoveRoleDB(role_id string, user_id string) {
 		return
 	}
 
-	Sugar.Info("Successfully deleted from the databases")
+	Sugar.Info("Successfully deleted from the database")
 }
 
 func TraverseDB(user_id string) *Role {
@@ -117,14 +129,14 @@ func CheckUserHasRole(user_id string) int {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			Sugar.Infow("User not found", "user_id", user_id)
+			Sugar.Infow("User does not have a role", "user_id", user_id)
 			return 1
 		} else {
-			Sugar.Errorw("query failed", "error", err)
+			Sugar.Errorw("Query failed", "error", err)
 			return 2
 		}
 	}
 
-	Sugar.Infow("User found")
+	Sugar.Infow("User has a role")
 	return 0
 }
