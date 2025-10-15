@@ -9,7 +9,8 @@ import (
 var Sugar *zap.SugaredLogger
 
 func Logger() {
-	logger, _ := zap.NewProduction()
+
+	logger := zap.Must(zap.NewDevelopment())
 	Sugar = logger.Sugar()
 }
 

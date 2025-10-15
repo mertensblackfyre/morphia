@@ -72,7 +72,7 @@ func ReorderRole(s *discordgo.Session, guildID string, role_id string) error {
 func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 
 	if CheckUserHasRole(interaction.Member.User.ID) == 0 {
-		ReplyError(session, interaction, "You already have a role")
+		ReplyError(session, interaction, "You already have a role.")
 		return
 	}
 
@@ -120,9 +120,9 @@ func CreateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 
 	str := strconv.Itoa(color)
 	InsertRoleDB(role.ID, name, interaction.Member.User.ID, str)
-	ReplySuccess(session, interaction, "Role created")
+	msg := fmt.Sprintf("Role have been created.\n Name: %s\n Color: %s", role.Name, str)
+	ReplySuccess(session, interaction, msg)
 	Sugar.Infof("Role %s have been created", name)
-	return
 }
 
 func DeleteRole(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
@@ -181,8 +181,21 @@ func UpdateRole(session *discordgo.Session, interaction *discordgo.InteractionCr
 	UpdateRoleDB(name, str, r.RoleID)
 	ReplySuccess(session, interaction, "Role Updated")
 	Sugar.Infof("Role %s have been updated", name)
-	return
 
+}
+
+func GetPremuimUsers(session *discordgo.Session) {
+	members, err := session.GuildMembers(session.State.Application.GuildID, "", 1000)
+	if err != nil {
+		fmt.Println("Error getting members:", err)
+		return
+	}
+
+	for _, m := range members {
+		if m.PremiumSince != nil {
+			fmt.Printf(" Booster: %s (%s)\n", m.User.Username, m.User.ID)
+		}
+	}
 }
 
 func ReplyError(s *discordgo.Session, i *discordgo.InteractionCreate, msg string) {

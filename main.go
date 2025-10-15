@@ -10,6 +10,12 @@ import (
 
 func main() {
 
+	defer func() {
+		if r := recover(); r != nil {
+			Sugar.Error(r)
+		}
+	}()
+
 	Init()
 	Logger()
 
@@ -47,6 +53,7 @@ func main() {
 func onInteraction(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	data := i.ApplicationCommandData()
 
+	GetPremuimUsers(s)
 	switch data.Name {
 	case "createrole":
 		go CreateRole(s, i)
